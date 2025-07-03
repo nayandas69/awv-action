@@ -1,0 +1,28 @@
+# .github/workflows/awv-example.yml
+name: Run Auto Website Visitor
+
+on:
+  workflow_dispatch:
+
+jobs:
+  visit-website:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Optional: Checkout repo if you need to use a local config file
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Run AWV Action
+      - name: Visit a website with AWV
+        uses: nayandas69/awv-action@v1
+        with:
+          url: 'https://example.com'               # Required if not using config_file
+          count: '5'                               # How many times to visit
+          browser: 'chrome'                        # Which browser to use
+          headless: 'true'                         # Run without UI
+          auto_scroll: 'true'                      # Simulate scrolling
+          random_delay: 'true'                     # Adds random delay between actions
+          interval: '10'                           # 10 seconds between each visit
+          proxy: ${{ secrets.MY_PROXY }}           # Secret proxy if needed
+          log_level: 'INFO'                        # Logging level

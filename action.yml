@@ -1,0 +1,88 @@
+name: 'AWV Action'
+description: 'GitHub Action to run auto-website-visitor with full CLI and config file support.'
+author: 'nayandas69'
+
+branding:
+  icon: 'globe'
+  color: 'blue'
+
+inputs:
+  url:
+    description: 'Target website URL to visit'
+    required: false
+  count:
+    description: 'Number of visits'
+    required: false
+    default: '1'
+  browser:
+    description: 'Browser to use: chrome, firefox, or edge'
+    required: false
+    default: 'chrome'
+  headless:
+    description: 'Run in headless mode'
+    required: false
+    default: 'true'
+  proxy:
+    description: 'Proxy server (ip:port or user:pass@ip:port)'
+    required: false
+  config_file:
+    description: 'Path to a YAML or JSON config file in the repo'
+    required: false
+  interval:
+    description: 'Interval in seconds between visits'
+    required: false
+  auto_scroll:
+    description: 'Enable auto-scrolling'
+    required: false
+    default: 'false'
+  random_delay:
+    description: 'Enable random delay between actions'
+    required: false
+    default: 'false'
+  log_level:
+    description: 'Log level (DEBUG, INFO, WARNING, ERROR)'
+    required: false
+    default: 'INFO'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install auto-website-visitor
+      shell: bash
+      run: |
+        pip install --upgrade pip
+        pip install auto-website-visitor
+
+    - name: Run AWV
+      shell: bash
+      run: |
+        echo "Running auto-website-visitor..."
+
+        # Use config file if specified
+        if [[ -n "${{ inputs.config_file }}" ]]; then
+          echo "Using config file: ${{ inputs.config_file }}"
+          awv --config "${{ inputs.config_file }}"
+        else
+          # Build command dynamically from CLI inputs
+          CMD="awv"
+          [[ -n '${{ inputs.url }}' ]] && CMD+=" --url '${{ inputs.url }}'"
+          [[ -n '${{ inputs.count }}' ]] && CMD+=" --count '${{ inputs.count }}'"
+          [[ -n '${{ inputs.browser }}' ]] && CMD+=" --browser '${{ inputs.browser }}'"
+          [[ '${{ inputs.headless }}' == 'true' ]] && CMD+=" --headless"
+          [[ -n '${{ inputs.proxy }}' ]] && CMD+=" --proxy '${{ inputs.proxy }}'"
+          [[ '${{ inputs.auto_scroll }}' == 'true' ]] && CMD+=" --auto-scroll"
+          [[ '${{ inputs.random_delay }}' == 'true' ]] && CMD+=" --random-delay"
+          [[ -n '${{ inputs.interval }}' ]] && CMD+=" --interval '${{ inputs.interval }}'"
+          [[ -n '${{ inputs.log_level }}' ]] && CMD+=" --log-level '${{ inputs.log_level }}'"
+
+          echo "Final command: $CMD"
+          eval "$CMD"
+        fi
